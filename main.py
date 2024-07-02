@@ -2,40 +2,54 @@ import os
 from prettytable import PrettyTable
 
 def main():
-
     # get a directory as user input
-    directory = None
-    while not directory:
-        directory = get_directory()
-        # check if the directory exists
-        if os.path.exists(directory):
-            print("The directory exists!")
-        else:
-            print("The directory does not exist!")
-            directory = None
-    directory += "/definition/pages/"
+    directory = getDirectory()
 
     # create a dictionary to store folder and displayname
-    dictionary = {}
+    dictionary = getFolderDisplayName(directory)
 
-    # Iterate into each folder in the directory, open page.json and get displayName from json object
-    for folder in os.listdir(directory):
-        if os.path.isdir(directory + folder):
-            with open(directory + folder + "/page.json") as f:
-                data = f.read()
-                # add folder and diasplayname to the dictionary
-                dictionary[folder] = data.split('"displayName": "')[1].split('"')[0]
-
-    # create a table with folder and displayname using PrettyTable
-    table = PrettyTable()
-    table.field_names = ["Folder", "DisplayName"]
-    for key, value in dictionary.items():
-        table.add_row([key, value])
-
+    table = makeTable(dictionary)
     print(table)
 
-def get_directory():
-    return input("Enter ReportName.Report directory path: ")
+def getDirectory():
+    directory = None
+    while not directory:
+        directory = input("Enter ReportName.Report directory path: ")
+        if not isDirectory(directory):
+            directory = None
+    directory += "/definition/pages/"
+    return directory
+
+def isDirectory(directory):
+    if not os.path.exists(directory):
+        print("Invalid directory path")
+        return False
+    return True
+
+def getFolderDisplayName(directory):
+    dictionary = {}
+    for folder in os.listdir(directory):
+        if os.path.isdir(directory + folder):
+            dictionary[folder] = getDisplayName(directory + folder)
+    return dictionary
+
+def getDisplayName(folder):
+    # get displayName from page.json in the folder
+    displayName = ""
+    try:
+        with open(folder + "/page.json") as file:
+            data = file.read()
+            displayName = data.split('"displayName":')[1].split(',')[0].strip().strip('"')
+    except:
+        pass
+    return displayName
+
+def makeTable(dictionary):
+    table = PrettyTable()
+    table.field_names = ["Folder", "Display Name"]
+    for folder in dictionary:
+        table.add_row([folder, dictionary[folder]])
+    return table
 
 if __name__ == "__main__":
     main()
